@@ -5,11 +5,11 @@ stty sane
 
 # VARIAVEIS
 export HOME=`whoami`
-export ENTRADA="/$HOME/xml_nfse/$1_B.xml"
+export ENTRADA="/$HOME/xmlnfse/$1_1.xml"
 export ENVELOPE="/tmp/$1.env"
 export LOG="/tmp/$1.log"
-export RETORNO="/tmp/$1_C.xml"
-export RECIBO="/$HOME/xml_nfse/$1_C.xml"
+export RETORNO="/tmp/$1_3.xml"
+export RECIBO="/$HOME/xmlnfse/$1_3.xml"
 export COMANDO="/tmp/$1.sh"
 
 rm -f $LOG
@@ -40,9 +40,9 @@ echo "-o $RETORNO \\" >> $COMANDO
 
 echo "--connect-timeout 30 \\" >> $COMANDO
 
-echo "--cert cliente.pem \\" >> $COMANDO #cliente geralmente extraido de um certificado digital
+echo "--cert \\" >> $COMANDO #cliente geralmente extraido de um certificado digital
 
-echo "--key chave.pem \\" >> $COMANDO #senha do certificado digital
+echo "--key \\" >> $COMANDO #senha do certificado digital
 
 echo "--insecure \\" >> $COMANDO
 
