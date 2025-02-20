@@ -1,0 +1,61 @@
+#!/bin/bash
+
+a=`stty -g`
+stty sane
+
+# VARIAVEIS
+export HOME=`whoami`
+export ENTRADA="/$HOME/xml_nfse/$1_B.xml"
+export ENVELOPE="/tmp/$1.env"
+export LOG="/tmp/$1.log"
+export RETORNO="/tmp/$1_C.xml"
+export RECIBO="/$HOME/xml_nfse/$1_C.xml"
+export COMANDO="/tmp/$1.sh"
+
+rm -f $LOG
+#rm -f $RECIBO
+rm -f $RETORNO
+rm -f $COMANDO
+rm -f $ENVELOPE
+
+# Envelope usado pela GPI - Nota Fiscal de Serviço Eletrônica
+echo -n "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:nfse=\"http://nfse.abrasf.org.br\">
+<soapenv:Header/>
+<soapenv:Body>
+<nfse:GerarNfse>
+<nfseCabecMsg><![CDATA[<cabecalho xmlns=\"http://www.abrasf.org.br/nfse.xsd\"><versaoDados>2.04</versaoDados></cabecalho>]]></nfseCabecMsg>
+<nfseDadosMsg><![CDATA[<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>" > $ENVELOPE
+
+
+cat $ENTRADA | sed '/<?xml version="1.0"?>/d' >> $ENVELOPE
+
+echo -n "]]></nfseDadosMsg></nfse:GerarNfse></soapenv:Body></soapenv:Envelope>" >> "$ENVELOPE"
+
+echo "curl --silent --trace-ascii $LOG \\" > $COMANDO
+
+echo "https://nfse-backend.portovelho.ro.gov.br/producao/NfseWSService \\" >> $COMANDO
+
+echo "-o $RETORNO \\" >> $COMANDO
+
+echo "--connect-timeout 30 \\" >> $COMANDO
+
+echo "--cert cliente.pem \\" >> $COMANDO #cliente geralmente extraido de um certificado digital
+
+echo "--key chave.pem \\" >> $COMANDO #senha do certificado digital
+
+echo "--insecure \\" >> $COMANDO
+
+echo "--header 'SOAPAction: \"http://nfse.abrasf.org.br/GerarNfse\"' \\" >> $COMANDO
+echo "--header 'Content-Type: text/xml; charset=UTF-8' \\" >> $COMANDO
+
+echo "--data @$ENVELOPE" >> "$COMANDO"
+
+sh $COMANDO
+cat $RETORNO | \
+sed 's/\&lt;/</g' | \
+sed 's/\&gt;/>/g' | \
+sed 's/\&quot;/"/g' | \
+sed 's/<?xml version="1.0"?>//g' > $RECIBO
+
+stty $a
